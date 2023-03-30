@@ -30,7 +30,6 @@ print("Calibrated offsets: ", accelerometer.offset) #change the calibrated offse
 
 #global data
 accel = [[0,0,0,0]]
-global orientation = 0
 
 def _readData():
     spreadsheet = open("values.txt", 'a')
@@ -75,15 +74,18 @@ def _get_accel(): #Get the acceleration values
     sumaccel_z = sumaccel_z/len(tempaccel_z)
 
     totalaccel = math.sqrt(math.pow(sumaccel_x, 2) + math.pow(sumaccel_y, 2) + math.pow(sumaccel_z, 2))  #calculate total acceleration
-    print(sumaccel_x, sumaccel_y, sumaccel_z)
     
+    orientation = 0
     #finds orientation
-    if (|sumaccel_x| > |sumaccel_y|) and (|sumaccel_x| > |sumaccel_z|):
-        orientation = 0  #tipped sideways
-    elif (|sumaccel_y| > |sumaccel_x|) and (|sumaccel_y| > |sumaccel_z|):
-        oritentation = 1
-    else:
-        orientation = 2
+    if (abs(sumaccel_x) > abs(sumaccel_y)) and (abs(sumaccel_x) > abs(sumaccel_z)):
+        orientation = 0  #racket side up
+    elif (abs(sumaccel_y) > abs(sumaccel_x)) and (abs(sumaccel_y) > abs(sumaccel_z)):
+        orientation = -50  #racket face flat
+    elif (abs(sumaccel_z) > abs(sumaccel_x)) and (abs(sumaccel_z) > abs(sumaccel_y)):
+        orientation = 50  #up and down (default calibraition)
+                                                  
+    print(sumaccel_x, sumaccel_y, sumaccel_z,orientation)
+
         
     return sumaccel_x, sumaccel_y, sumaccel_z #return variables
 
