@@ -5,7 +5,6 @@ import board
 import adafruit_adxl37x
 import busio
 import math
-
 #Initialize
 dir(board)
 i2c = busio.I2C(board.GP21, board.GP20)
@@ -31,6 +30,7 @@ print("Calibrated offsets: ", accelerometer.offset) #change the calibrated offse
 
 #global data
 accel = [[0,0,0,0]]
+global orientation = 0
 
 def _readData():
     spreadsheet = open("values.txt", 'a')
@@ -44,13 +44,14 @@ def _get_accel(): #Get the acceleration values
     gx = 0
     gy = 0
     gz = 0
-    for i in range (0, 20): #read values 20 times
+    
+    for i in range (0, 10): #read values 20 times
         #read acceleration
-        gx = 0.6 * gx + 0.4 * accelerometer.raw_x #low pass filter that removes gravity from acceleration (x)
+#         gx = 0.6 * gx + 0.4 * accelerometer.raw_x #low pass filter that removes gravity from acceleration (x)
         imu_accel_x = accelerometer.raw_x - gx
-        gy = 0.6 * gy + 0.4 * accelerometer.raw_y #low pass filter that removes gravity from acceleration (y)
+#         gy = 0.6 * gy + 0.4 * accelerometer.raw_y #low pass filter that removes gravity from acceleration (y)
         imu_accel_y = accelerometer.raw_y - gy
-        gz = 0.6 * gz + 0.4 * accelerometer.raw_z #low pass filter that removes gravity from acceleration (z)
+#         gz = 0.6 * gz + 0.4 * accelerometer.raw_z #low pass filter that removes gravity from acceleration (z)
         imu_accel_z = accelerometer.raw_z - gz
 
         #append acceleration into specific arrays
@@ -74,7 +75,17 @@ def _get_accel(): #Get the acceleration values
     sumaccel_z = sumaccel_z/len(tempaccel_z)
 
     totalaccel = math.sqrt(math.pow(sumaccel_x, 2) + math.pow(sumaccel_y, 2) + math.pow(sumaccel_z, 2))  #calculate total acceleration
-    return sumaccel_x, sumaccel_y, sumaccel_z, totalaccel #return variables
+    print(sumaccel_x, sumaccel_y, sumaccel_z)
+    
+    #finds orientation
+    if (|sumaccel_x| > |sumaccel_y|) and (|sumaccel_x| > |sumaccel_z|):
+        orientation = 0  #tipped sideways
+    elif (|sumaccel_y| > |sumaccel_x|) and (|sumaccel_y| > |sumaccel_z|):
+        oritentation = 1
+    else:
+        orientation = 2
+        
+    return sumaccel_x, sumaccel_y, sumaccel_z #return variables
 
 
 def _check_hit(accel):
@@ -87,10 +98,10 @@ def _check_hit(accel):
 
 Flag = False
 while Flag == False: # repeats getting acceleration until hit is recorded
-    sumx, sumy, sumz, sumt = _get_accel() #outputs: x, y, z, total
-    tempsum = [sumx, sumy, sumz, sumt]
+    sumx, sumy, sumz = _get_accel() #outputs: x, y, z, total
+    tempsum = [sumx, sumy, sumz]
     accel.append(tempsum)
-    Flag = _check_hit()
+    Flag = _check_hit(accel)
  
 #when hit leave loop and check other things
 #GOOD HIT / BAD HIT USING MATH
