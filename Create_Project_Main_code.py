@@ -30,6 +30,12 @@ print("Calibrated offsets: ", accelerometer.offset) #change the calibrated offse
 
 #global data
 accel = [[0,0,0,0]]
+global gx
+global gy
+global gz
+gx = 0
+gy = 0
+gz = 0
 
 def _readData():
     spreadsheet = open("values.txt", 'a')
@@ -40,18 +46,12 @@ def _get_accel(): #Get the acceleration values
     tempaccel_x = [0] #set arrays to be empty
     tempaccel_y = [0]
     tempaccel_z = [0]
-    gx = 0
-    gy = 0
-    gz = 0
     
     for i in range (0, 10): #read values 20 times
         #read acceleration
-#         gx = 0.6 * gx + 0.4 * accelerometer.raw_x #low pass filter that removes gravity from acceleration (x)
-        imu_accel_x = accelerometer.raw_x - gx
-#         gy = 0.6 * gy + 0.4 * accelerometer.raw_y #low pass filter that removes gravity from acceleration (y)
-        imu_accel_y = accelerometer.raw_y - gy
-#         gz = 0.6 * gz + 0.4 * accelerometer.raw_z #low pass filter that removes gravity from acceleration (z)
-        imu_accel_z = accelerometer.raw_z - gz
+        imu_accel_x = accelerometer.raw_x
+        imu_accel_y = accelerometer.raw_y
+        imu_accel_z = accelerometer.raw_z
 
         #append acceleration into specific arrays
         tempaccel_x.append(imu_accel_x)
@@ -73,44 +73,56 @@ def _get_accel(): #Get the acceleration values
       sumaccel_z = sumaccel_z + tempaccel_z[i] #For z
     sumaccel_z = sumaccel_z/len(tempaccel_z)
 
-    totalaccel = math.sqrt(math.pow(sumaccel_x, 2) + math.pow(sumaccel_y, 2) + math.pow(sumaccel_z, 2))  #calculate total acceleration
+    return sumaccel_x, sumaccel_y, sumaccel_z
     
+def total_acceleration(sumx, sumy, sumz, gx, gy, gz):
+    #for total acceleration must read original values to remove gravity
+    for i in range (0, 20): #take average of multiple values
+        gx = 0.9 * gx + 0.1 * accelerometer.raw_x #low pass filter that removes gravity from acceleration (x)
+        imu_accel_x = accelerometer.raw_x - gx
+        gy = 0.9 * gy + 0.1 * accelerometer.raw_y #low pass filter that removes gravity from acceleration (y)
+        imu_accel_y = accelerometer.raw_y - gy
+        gz = 0.9 * gz + 0.1 * accelerometer.raw_z #low pass filter that removes gravity from acceleration (z)
+        imu_accel_z = accelerometer.raw_z - gz
+    totalaccel = abs(math.sqrt(math.pow(sumx, 2) + math.pow(sumy, 2) + math.pow(sumz, 2))-18)
+    return totalaccel
+    
+
+def find_orientation (sumx, sumy, sumz):
     orientation = 0
-    #finds orientation
-    if (abs(sumaccel_x) > abs(sumaccel_y)) and (abs(sumaccel_x) > abs(sumaccel_z)):
+    #finds orientation but only when not moving
+    if (abs(sumx) > abs(sumy)) and (abs(sumx) > abs(sumz)):
         orientation = 0  #racket side up
-    elif (abs(sumaccel_y) > abs(sumaccel_x)) and (abs(sumaccel_y) > abs(sumaccel_z)):
+    elif (abs(sumy) > abs(sumx)) and (abs(sumy) > abs(sumz)):
         orientation = -50  #racket face flat
-    elif (abs(sumaccel_z) > abs(sumaccel_x)) and (abs(sumaccel_z) > abs(sumaccel_y)):
+    elif (abs(sumz) > abs(sumx)) and (abs(sumz) > abs(sumy)):
         orientation = 50  #up and down (default calibraition)
-                                                  
-    print(sumaccel_x, sumaccel_y, sumaccel_z,orientation)
+                          
+    # if acceleration is greater than gravity in any direction minus excess acceleration from current one to find orientation
+#     print(orientation)
+    
+    return orientation
 
-        
-    return sumaccel_x, sumaccel_y, sumaccel_z #return variables
-
-
-def _check_hit(accel):
-    #check using math wheter the thing has been hit or not
-    #MATH
-    if ():
-        return True
-    else:
-        return False
 
 Flag = False
 while Flag == False: # repeats getting acceleration until hit is recorded
-    sumx, sumy, sumz = _get_accel() #outputs: x, y, z, total
+    #LOOP FOR READING VALUES
+    #ONLY VALUES GO IN LOOP
+    sumx, sumy, sumz = _get_accel() #outputs: x, y, z
+    #acceleration values = sumx, sumy, sumz
+    sumaccel = total_acceleration(sumx, sumy, sumz, gx, gy, gz) #total acceleration
+    #total acceleration is different because must remove gravity
+    orientation = find_orientation(sumx, sumy, sumz)
+    print (sumaccel, orientation)
+    
     tempsum = [sumx, sumy, sumz]
     accel.append(tempsum)
-    Flag = _check_hit(accel)
  
 #when hit leave loop and check other things
 #GOOD HIT / BAD HIT USING MATH
 #WHAT KIND OF HIT USING GRAVITY (always accelerating downwards at 9.8m/s^2)
 #plot hit with acceleration and time
     
-
 
 
 
