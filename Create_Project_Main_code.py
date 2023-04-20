@@ -5,6 +5,8 @@ import board
 import adafruit_adxl37x
 import busio
 import math
+import os
+
 #Initialize
 dir(board)
 i2c = busio.I2C(board.GP21, board.GP20)
@@ -29,7 +31,8 @@ accelerometer.offset = (
 print("Calibrated offsets: ", accelerometer.offset) #change the calibrated offsets 
 
 #global data
-accel = [[0,0,0,0]]
+accel = [0]
+saveVal = [0]
 global gx
 global gy
 global gz
@@ -37,17 +40,12 @@ gx = 0
 gy = 0
 gz = 0
 
-def _readData():
-    spreadsheet = open("values.txt", 'a')
-    spreadsheet.write(accel[0], "\t", accel[1], "\t", accel[2], "\n")
-
-
 def _get_accel(): #Get the acceleration values
     tempaccel_x = [0] #set arrays to be empty
     tempaccel_y = [0]
     tempaccel_z = [0]
     
-    for i in range (0, 10): #read values 20 times
+    for i in range (0, 10): #read values 10 times
         #read acceleration
         imu_accel_x = accelerometer.raw_x
         imu_accel_y = accelerometer.raw_y
@@ -58,7 +56,7 @@ def _get_accel(): #Get the acceleration values
         tempaccel_y.append(imu_accel_y)
         tempaccel_z.append(imu_accel_z)
 
-    sumaccel_x = 0 #weird idk but use to find average accelration out of the x samples
+    sumaccel_x = 0 #use to find average accelration out of the x samples
     for i in range(len(tempaccel_x)):
       sumaccel_x = sumaccel_x + tempaccel_x[i] #For x
     sumaccel_x = sumaccel_x/len(tempaccel_x)
@@ -89,35 +87,92 @@ def total_acceleration(sumx, sumy, sumz, gx, gy, gz):
     
 
 def find_orientation (sumx, sumy, sumz):
+  	temp_orient = [0]
     orientation = 0
     #finds orientation but only when not moving
-    if (abs(sumx) > abs(sumy)) and (abs(sumx) > abs(sumz)):
-        orientation = 0  #racket side up
-    elif (abs(sumy) > abs(sumx)) and (abs(sumy) > abs(sumz)):
-        orientation = -50  #racket face flat
-    elif (abs(sumz) > abs(sumx)) and (abs(sumz) > abs(sumy)):
-        orientation = 50  #up and down (default calibraition)
+    for i in range 5: #
+        if (abs(sumx) > abs(sumy)) and (abs(sumx) > abs(sumz)):
+            orientation = 0  #racket side up
+        elif (abs(sumy) > abs(sumx)) and (abs(sumy) > abs(sumz)):
+            orientation = -50  #racket face flat
+        elif (abs(sumz) > abs(sumx)) and (abs(sumz) > abs(sumy)):
+            orientation = 50  #up and down (default calibraition)
+    		temp_orient[i] = orientation
                           
     # if acceleration is greater than gravity in any direction minus excess acceleration from current one to find orientation
-#     print(orientation)
+		
+    return temp_orient
+
+#USER INTERFACE
+def menu():
+#     system('cls') #Clear stuff
+    print("       Badminton Trainer       ")
+    print("                               ")
+    print("   Press 1 to start training   ")
+    print("   Press 2 for instructions    ")
+    print("   Press 3 for past data       ")
+    print("   Press 4 to Exit             \n")
+
+    flag = False
+    while flag == False:
+        decision = int(input("input: ")) #Get user input
+        if decision == 1:
+            flag = True #exit out of function and go to main code
+        elif decision == 2:
+            print() #Print instructions
+            input("Press any key to return to menu.")
+        elif decision == 3:
+            #CLEAR CONSOLE
+            #print past data
+            #NEED TO DECLARE ARRAY WITH NOTHING FIRST OR BREAKS
+            input("Press any key to return to menu.")
+        elif decision == 4:
+            exit()
     
-    return orientation
+def past_data():
+  	x = 90
+#print data from array appended in running_menu
+
+def _readData(val, orient):
+#menu for while the code is running
+    try:
+        print("Maximum Acceleration During Hit: ", val[-1])
+        print("Type of Hit: ", )
+        print("Estimated distance: ", ) 
+    except:
+        print("Maximum Acceleration During Hit: N/A")
+        print("Type of Hit: N/A")
+        print("Estimated distance: N/A")
+    #store this hit data in an array for user to acess later
+
+    #if any key pressed
+    
 
 
-Flag = False
-while Flag == False: # repeats getting acceleration until hit is recorded
-    #LOOP FOR READING VALUES
-    #ONLY VALUES GO IN LOOP
-    sumx, sumy, sumz = _get_accel() #outputs: x, y, z
-    #acceleration values = sumx, sumy, sumz
-    sumaccel = total_acceleration(sumx, sumy, sumz, gx, gy, gz) #total acceleration
-    #total acceleration is different because must remove gravity
-    orientation = find_orientation(sumx, sumy, sumz)
-    print (sumaccel, orientation)
+#MAIN CODE
+while 1:
+    menu()
+    Flag = False
+    while Flag == False: # repeats getting acceleration until hit is recorded
+        #LOOP FOR READING VALUES
+        #ONLY VALUES GO IN LOOP
+        sumx, sumy, sumz = _get_accel() #outputs: x, y, z
+        #acceleration values = sumx, sumy, sumz
+        sumaccel = total_acceleration(sumx, sumy, sumz, gx, gy, gz) #total acceleration
+        #total acceleration is different because must remove gravity
+        orientation = find_orientation(sumx, sumy, sumz)
+        print (sumaccel, orientation[-1])
+
+        accel.append(sumaccel)
+        if len(accel) > 5:
+            if accel[-1] > (accel[-5] + 20):
+                print("Hit!")
+                saveVal.append(accel[-1])
+                accel.clear()  #clears the unused values
+                _readData(saveVal, orientation)
     
-    tempsum = [sumx, sumy, sumz]
-    accel.append(tempsum)
- 
+#     Flag = running_menu() #print current values for user
+     
 #when hit leave loop and check other things
 #GOOD HIT / BAD HIT USING MATH
 #WHAT KIND OF HIT USING GRAVITY (always accelerating downwards at 9.8m/s^2)
