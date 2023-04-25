@@ -225,6 +225,11 @@ accelerometer.offset = (
 print("Calibrated offsets: ", accelerometer.offset) #change the calibrated offsets 
     
 #THE FIRST CALL (ORIENTATION = FLAT) (ACCELERATION ISNT MOVING)
+_get_accel()
+orient_list, accel = _read_accel(tempaccel_x, tempaccel_y, tempaccel_z, accel, orient_list)
+if orient_list[-1] is not "side":
+  	print("Please calibrate with racket flat. ")
+orient_list = [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 
 #MAIN CODE
 height = 0
@@ -244,6 +249,11 @@ while 1:
 #WHAT KIND OF HIT USING GRAVITY (always accelerating downwards at 9.8m/s^2)
 #plot hit with acceleration and time
     
+
+
+
+
+
 
 
 
