@@ -1,4 +1,4 @@
-#by Aaron Yang and Jake Hui
+
 import time
 import stdlib
 import board
