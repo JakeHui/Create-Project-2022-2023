@@ -11,7 +11,6 @@ import sys
 #global data
 accel = [20, 20, 20, 20, 20 ,20 ,20 ,20 ,20, 20, 20, 20, 20] #array for the acceleration data (starts at combined gravity)
 global height #height of player (taken as input)
-orient_list = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] #tracks orientation of racket over time
 tempaccel_x = [0] #set temporary acceleration arrays to be empty
 tempaccel_y = [0]
 tempaccel_z = [0]
@@ -21,6 +20,7 @@ ornt = "N/A"
 edis = "N/A"
 save = "N/A"
 orientation = "overhand" 
+orient_list = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] #tracks orientation of racket over time
 
 def _get_accel(): #Get the acceleration values
     tempaccel_x = [0] #set arrays to be empty
