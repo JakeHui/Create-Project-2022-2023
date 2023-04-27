@@ -144,7 +144,8 @@ def menu(saved_data):
                 print("Please type an integer. " )
         
     return 0
-  
+
+#CHECK HIT FUNCTION DEVELOPED BY JAKE HUI
 def check_hit(accel, orient_list, saved_data): 
     orientation = orient_list[-20] #reference the orientation at the beginning of the hit
     max_accel = 0 
